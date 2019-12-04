@@ -1,51 +1,64 @@
 const express = require('express');
-
-const postsModel = require('../api/posts/postsModel.js');
-
+const Posts = require('./postsModel');
 const router = express.Router();
-
-router.use(express.json());
 
 // POST Request #1
 
-router.post('/api/posts', (req, res) => {
-  const description = req.body;
-  if (!description.title || !description.contents) {
-    res.status(400).json({ error: 'Please provide title and contents for the post.' });
-  } else {
-    db.insert(description)
-      .then(desc => {
-        res.status(201).json(desc);
-      })
-      .catch(error => {
-        res.json({ error: 'There was an error while saving the post to the database' });
-      });
-  }
+router.post('/', (req, res) => {
+  const { title, contents } = Posts.insert(req.body)
+    .then(posts => {
+      title && contents === ''
+        ? res.status(400).json({ errorMessage: 'Please provide title and contents for the post.' })
+        : res.status(201).json(posts);
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({ error: 'There was an error while saving the post to the database' });
+    });
 });
 
 // POST Request #2
 
-router.post('/api/posts/:id/comments', (req, res) => {
-  const commentDescription = req.body;
-  if (!commentDescription.text) {
-    res.status(404).json({ error: 'Please provide text for the comment..' });
-  } else {
-    db.insert(commentDescription)
-      .then(desc => {
-        res.status(201).json(desc);
+router.post('/:id/comments', (req, res) => {
+  const id = req.params.id;
+  const { text } = req.body;
+  if (text) {
+    Posts.findById(id)
+      .then(post => {
+        if (post.length) {
+          Posts.insertComment({ text: text, post_id: id })
+            .then(() => {
+              res.status(201).json({ message: req.body });
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(500).json({
+                error: 'There was an error while saving the comment to the database.',
+              });
+            });
+        } else {
+          res.status(404).json({
+            message: 'The post with the specified ID does not exist.',
+          });
+        }
       })
-      .catch(error => {
-        res.json({ error: 'There was an error while saving the post to the database' });
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: 'There was an error while saving the comment to the database.',
+        });
       });
+  } else {
+    res.status(400).json({ errorMessage: 'Please provide text for the comment.' });
   }
 });
 
 // GET Request #1
 
-router.get('/posts', (req, res) => {
-  Hubs.find(req.query)
-    .then(hubs => {
-      res.status(200).json(hubs);
+router.get('/', (req, res) => {
+  Posts.find()
+    .then(posts => {
+      res.status(200).json({ posts });
     })
     .catch(error => {
       console.log(error);
@@ -57,77 +70,78 @@ router.get('/posts', (req, res) => {
 
 // GET Request #2
 
+router.get('/:id', (req, res) => {
+  const id = req.params.id;
+  Posts.findById(id)
+    .then(posts => {
+      posts
+        ? res.status(200).json(posts)
+        : res.status(404).json({ message: 'The post with the specified ID does not exist.' });
+    })
+    .catch(error => {
+      res.status(500).json({ error: 'The post information could not be retrieved.' });
+    });
+});
+
 // GET Request #3
 
-// DELETE Request
+router.get('/:id/comments', (req, res) => {
+  Posts.findPostComments(req.params.id)
+    .then(comment => {
+      !comment
+        ? res.status(500).json({ message: 'The post with the specified ID does not exist.' })
+        : res.status(200).json(comment);
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({ error: 'There was an error while saving the comment to the database' });
+    });
+});
 
 // PUT Request
 
-// router.get("/:id", (req, res) => {
-//   Hubs.findById(req.params.id)
-//     .then(hub => {
-//       if (hub) {
-//         res.status(200).json(hub);
-//       } else {
-//         res.status(404).json({ message: "Hub not found" });
-//       }
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: "Error retrieving the hub"
-//       });
-//     });
-// });
+router.put('/:id', (req, res) => {
+  const id = req.params.id;
+  const updated = req.body;
+  Posts.findById(id)
+    .then(newUpdates => {
+      if (newUpdates) {
+        res.status(201).json(newUpdates);
+      } else {
+        res.status(404).json({ message: 'The post with the specified ID does not exist.' });
+      }
+      if (!updated.text) {
+        Posts.update(id, updated)
+          .then(user => {
+            res.status(201).json(user);
+          })
+          .catch(err => {
+            res.status(400).json({ errorMessage: 'Please provide text for the comment.' });
+          });
+      } else if (!user.id) {
+        res.status(404).json({ message: 'The post with the specified ID does not exist.' });
+      } else {
+        res.status(400).json({ errorMessage: 'Please provide text for the comment.' });
+      }
+    })
+    .catch(error => {
+      res.status(500).json({ error: 'There was an error while saving the comment to the database' });
+    });
+});
 
-// router.put("/:id", (req, res) => {
-//   const changes = req.body;
-//   Hubs.update(req.params.id, changes)
-//     .then(hub => {
-//       if (hub) {
-//         res.status(200).json(hub);
-//       } else {
-//         res.status(404).json({ message: "The hub could not be found" });
-//       }
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: "Error updating the hub"
-//       });
-//     });
-// });
+// DELETE Request
 
-// // add an endpoint that returns all the messages for a hub
-// // GET /api/hubs   /:id/messages
-// router.get("/:id/messages", (req, res) => {
-//   Hubs.findHubMessages(req.params.id)
-//     .then(messages => {
-//       res.status(200).json(messages);
-//     })
-//     .catch(error => {
-//       console.log(error);
-//       res.status(500).json({ errorMessage: "error getting hubs messages" });
-//     });
-// });
+router.delete('/:id', (req, res) => {
+  Posts.remove(req.params.id)
+    .then(count => {
+      count > 0
+        ? res.status(200).json({ message: 'post successfully deleted' })
+        : res.status(404).json({ message: 'The post with the specified ID does not exist.' });
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({ error: 'The post could not be removed' });
+    });
+});
 
-// // add an endpoint for adding new message to a hub
-
-// router.post("/:id/messages", (req, res) => {
-//   Hubs.addMessage(req.body)
-//     .then(message => {
-//       res.status(201).json(message);
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: "Error adding the message"
-//       });
-//     });
-// });
-
-// export default server; // ES6 Modules
 module.exports = router; // <<<<<<<<<<<<<<<< export the router

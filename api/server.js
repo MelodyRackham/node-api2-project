@@ -14,5 +14,4 @@ server.get('/', (req, res) => {
   res.status(200).json({ message: 'Hello World! I am working!' });
 });
 
-// export default server; ES6 Modules
 module.exports = server; // <<< Export the server
