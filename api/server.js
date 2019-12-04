@@ -2,18 +2,16 @@ const express = require('express');
 const server = express();
 
 // Import router files
-const usersRouter = require('../api/users/usersRouter');
+const postsRouter = require('./posts/postsRouter');
 
 server.use(express.json());
 
 // Use Router(s)
-server.use('/api/users');
+server.use('/api/posts', postsRouter);
 
+// Sanity check get to localHost
 server.get('/', (req, res) => {
-  res.send(`
-  <h2>Lambda Hubs API</h>
-  <p>Welcome to the Lambda Hubs API</p>
-`);
+  res.status(200).json({ message: 'Hello World! I am working!' });
 });
 
 // export default server; ES6 Modules

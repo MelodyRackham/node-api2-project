@@ -1,6 +1,6 @@
 const express = require('express');
 
-const postsModel = require('../api/users/posts-model.js/index.js');
+const postsModel = require('../api/posts/postsModel.js');
 
 const router = express.Router();
 
