@@ -1,8 +1,6 @@
 const express = require('express');
 
-// const Hubs = require('./hubs-model.js'); // ASK ABOUT THIS...
-
-const Hubs = require('./db.js');
+const postsModel = require('../api/users/posts-model.js/index.js');
 
 const router = express.Router();
 
@@ -44,18 +42,26 @@ router.post('/api/posts/:id/comments', (req, res) => {
 
 // GET Request #1
 
-// router.get('/', (req, res) => {
-//   Hubs.find(req.query)
-//     .then(hubs => {
-//       res.status(200).json(hubs);
-//     })
-//     .catch(error => {
-//       console.log(error);
-//       res.status(500).json({
-//         message: 'Error retrieving the hubs',
-//       });
-//     });
-// });
+router.get('/posts', (req, res) => {
+  Hubs.find(req.query)
+    .then(hubs => {
+      res.status(200).json(hubs);
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).json({
+        message: 'The posts information could not be retrieved.',
+      });
+    });
+});
+
+// GET Request #2
+
+// GET Request #3
+
+// DELETE Request
+
+// PUT Request
 
 // router.get("/:id", (req, res) => {
 //   Hubs.findById(req.params.id)
@@ -71,24 +77,6 @@ router.post('/api/posts/:id/comments', (req, res) => {
 //       console.log(error);
 //       res.status(500).json({
 //         message: "Error retrieving the hub"
-//       });
-//     });
-// });
-
-// router.delete("/:id", (req, res) => {
-//   Hubs.remove(req.params.id)
-//     .then(count => {
-//       if (count > 0) {
-//         res.status(200).json({ message: "The hub has been nuked" });
-//       } else {
-//         res.status(404).json({ message: "The hub could not be found" });
-//       }
-//     })
-//     .catch(error => {
-//       // log error to database
-//       console.log(error);
-//       res.status(500).json({
-//         message: "Error removing the hub"
 //       });
 //     });
 // });

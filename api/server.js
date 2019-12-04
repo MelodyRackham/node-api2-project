@@ -1,8 +1,13 @@
 const express = require('express');
-
-const hubsRouter = require('../hubs/hubs-hubsRouter.js');
-
 const server = express();
+
+// Import router files
+const usersRouter = require('../api/users/usersRouter');
+
+server.use(express.json());
+
+// Use Router(s)
+server.use('/api/users');
 
 server.get('/', (req, res) => {
   res.send(`
@@ -10,8 +15,6 @@ server.get('/', (req, res) => {
   <p>Welcome to the Lambda Hubs API</p>
 `);
 });
-
-server.use('/api/hubs', hubsRouter);
 
 // export default server; ES6 Modules
 module.exports = server; // <<< Export the server
